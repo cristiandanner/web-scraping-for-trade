@@ -3,17 +3,25 @@ from selenium import webdriver
 from bs4 import BeautifulSoup
 from webdriver_manager.chrome import ChromeDriverManager
 from datetime import datetime, date
-
-driver = webdriver.Chrome(ChromeDriverManager().install())
+import time
+import sys
 
 last_datetime = None
 
+driver = webdriver.Chrome(ChromeDriverManager().install())
 driver.get("https://markets.cboe.com/us/equities/market_statistics/book/AAPL/")
 
 content = driver.page_source
 soup = BeautifulSoup(content, 'lxml')
 
+time.sleep(5) # wait for Selenium page load
+
 last_updated_time = soup.find('span', id='bkTimestamp0')
+
+if not last_updated_time.text.strip(): # check last time is not null or empty
+	print('Last updated wasn\'t caught')
+	sys.exit()
+
 last_updated_datetime = datetime.now().strftime('%Y-%m-%d') + " " + last_updated_time.text
 
 # TODO - Create loop to get data permanently from the site
@@ -81,7 +89,7 @@ for i in range(len(last_10_times)):
 	last_10_shares_formatted.append(last_10_shares[i])
 	
 df = pd.DataFrame({'Top Shares':top_shares_formatted,'Top Prices':top_prices_formatted,'Last 10 Times':last_10_times_formatted,'Last 10 Prices':last_10_prices_formatted,'Last 10 Shares':last_10_shares_formatted}) 
-df.to_csv('products.csv', index=False, encoding='utf-8')	
+df.to_csv('trades.csv', index=False, encoding='utf-8')	
 	
 '''			
 print('ASKS Shares:')
