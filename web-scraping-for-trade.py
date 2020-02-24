@@ -14,22 +14,30 @@ top_prices_formatted = []
 last_10_times_formatted = []	
 last_10_prices_formatted = []	
 last_10_shares_formatted = []	
+captured_datetime = []	
+	
+def mainProcess():	
+	chrome_options = webdriver.ChromeOptions()
+	chrome_options.add_argument('--headless')
+	chrome_options.add_argument('--disable-gpu')
+	chrome_options.add_argument('window-size=1920x1080')
 
-def initialProcess():
-	driver = webdriver.Chrome(ChromeDriverManager().install())
+	driver = webdriver.Chrome(executable_path=ChromeDriverManager().install(), options=chrome_options)
 	driver.get("https://markets.cboe.com/us/equities/market_statistics/book/AAPL/")
+	driver.maximize_window()
 	content = driver.page_source
 	soup = BeautifulSoup(content, 'lxml')
-	time.sleep(5) # Wait for Selenium page load
-	return soup
-	
-def mainProcess(soup):	
+	#time.sleep(1) # Wait for Selenium page load in background
+
 	last_updated_time = soup.find('span', id='bkTimestamp0')
 	
+	driver.close()
+	driver.quit()	
+
 	if not last_updated_time.text.strip(): # Check last time is not null or empty
 		print('Last updated time wasn\'t caught')
 		sys.exit()
-	
+
 	last_updated_datetime = datetime.now().strftime('%Y-%m-%d') + " " + last_updated_time.text
 	current_datetime = datetime.strptime(last_updated_datetime, '%Y-%m-%d %H:%M:%S')
 	global last_datetime
@@ -72,6 +80,7 @@ def mainProcess(soup):
 			last_10_shares.append(i.text.replace(u"\xa0", u" "))		
 					
 		for i in range(len(last_10_times)):
+			captured_datetime.append(current_datetime.strftime('%Y-%m-%d %H:%M:%S'))
 			if i < 5:
 				top_shares_formatted.append(ask_shares[i])
 			else:
@@ -87,17 +96,16 @@ def mainProcess(soup):
 			last_10_shares_formatted.append(last_10_shares[i])
 		
 def main():
-	soup = initialProcess()
 	done = False
 	while not done:
 		if msvcrt.kbhit(): # Click in console and press 'Esc' to exit from script
 			# Create a csv file
-			df = pd.DataFrame({'Top Shares':top_shares_formatted,'Top Prices':top_prices_formatted,'Last 10 Times':last_10_times_formatted,'Last 10 Prices':last_10_prices_formatted,'Last 10 Shares':last_10_shares_formatted}) 
+			df = pd.DataFrame({'Top Shares':top_shares_formatted,'Top Prices':top_prices_formatted,'Last 10 Times':last_10_times_formatted,'Last 10 Prices':last_10_prices_formatted,'Last 10 Shares':last_10_shares_formatted,'Captured Datetimes':captured_datetime}) 
 			df.to_csv('trades.csv', index=False, encoding='utf-8')
 			# User press 'Esc' in keyboard
 			done = True
 		else:
-			mainProcess(soup)
+			mainProcess()
 
 if (__name__ == '__main__'): 
 	main()
