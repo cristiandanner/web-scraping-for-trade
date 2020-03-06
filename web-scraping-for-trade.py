@@ -95,6 +95,7 @@ def mainProcess(company):
 			last_10_prices_formatted.append(last_10_prices[i])
 			last_10_shares_formatted.append(last_10_shares[i])
 
+		# Create or append a csv file
 		file_name = "trades_" + datetime.now().strftime('%Y-%m-%d') + ".csv"
 		df = pd.DataFrame({'Top Shares':top_shares_formatted,'Top Prices':top_prices_formatted,'Last 10 Times':last_10_times_formatted,'Last 10 Prices':last_10_prices_formatted,'Last 10 Shares':last_10_shares_formatted,'Captured Datetimes':captured_datetime}) 
 		if not os.path.isfile(file_name):
@@ -106,7 +107,6 @@ def main(company):
 	done = False
 	while not done:
 		if msvcrt.kbhit(): # Click in console and press 'Esc' to exit from script
-			# Create a csv file
 			# User press 'Esc' in keyboard
 			done = True
 		else:
