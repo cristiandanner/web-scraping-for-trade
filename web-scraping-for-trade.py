@@ -10,14 +10,14 @@ import os
 
 last_datetime = None
 
-def mainProcess():	
+def mainProcess(company):	
 	chrome_options = webdriver.ChromeOptions()
 	chrome_options.add_argument('--headless')
 	chrome_options.add_argument('--disable-gpu')
 	chrome_options.add_argument('window-size=1920x1080')
 
 	driver = webdriver.Chrome(executable_path=ChromeDriverManager().install(), options=chrome_options)
-	driver.get("https://markets.cboe.com/us/equities/market_statistics/book/AAPL/")
+	driver.get("https://markets.cboe.com/us/equities/market_statistics/book/{}/".format(company))
 	driver.maximize_window()
 	content = driver.page_source
 	soup = BeautifulSoup(content, 'lxml')
@@ -100,9 +100,9 @@ def mainProcess():
 		if not os.path.isfile(file_name):
 			df.to_csv(file_name, index=False, encoding='utf-8')
 		else:
-			df.to_csv(file_name,index=False, encoding='utf-8', mode='a', header=False)
+			df.to_csv(file_name, index=False, encoding='utf-8', mode='a', header=False)
 
-def main():
+def main(company):
 	done = False
 	while not done:
 		if msvcrt.kbhit(): # Click in console and press 'Esc' to exit from script
@@ -110,7 +110,11 @@ def main():
 			# User press 'Esc' in keyboard
 			done = True
 		else:
-			mainProcess()
+			mainProcess(company)
 
 if (__name__ == '__main__'): 
-	main()
+	if len(sys.argv) >= 2:
+		company = sys.argv[1]
+	else:
+		company = 'AAPL'
+	main(company)
