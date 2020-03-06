@@ -6,16 +6,10 @@ from datetime import datetime, date
 import time
 import sys
 import msvcrt
+import os
 
 last_datetime = None
 
-top_shares_formatted = []	
-top_prices_formatted = []	
-last_10_times_formatted = []	
-last_10_prices_formatted = []	
-last_10_shares_formatted = []	
-captured_datetime = []	
-	
 def mainProcess():	
 	chrome_options = webdriver.ChromeOptions()
 	chrome_options.add_argument('--headless')
@@ -27,7 +21,6 @@ def mainProcess():
 	driver.maximize_window()
 	content = driver.page_source
 	soup = BeautifulSoup(content, 'lxml')
-	#time.sleep(1) # Wait for Selenium page load in background
 
 	last_updated_time = soup.find('span', id='bkTimestamp0')
 	
@@ -37,6 +30,13 @@ def mainProcess():
 	if not last_updated_time.text.strip(): # Check last time is not null or empty
 		print('Last updated time wasn\'t caught')
 		sys.exit()
+
+	top_shares_formatted = []	
+	top_prices_formatted = []	
+	last_10_times_formatted = []	
+	last_10_prices_formatted = []	
+	last_10_shares_formatted = []	
+	captured_datetime = []		
 
 	last_updated_datetime = datetime.now().strftime('%Y-%m-%d') + " " + last_updated_time.text
 	current_datetime = datetime.strptime(last_updated_datetime, '%Y-%m-%d %H:%M:%S')
@@ -94,14 +94,19 @@ def mainProcess():
 			last_10_times_formatted.append(last_10_times[i])
 			last_10_prices_formatted.append(last_10_prices[i])
 			last_10_shares_formatted.append(last_10_shares[i])
-		
+
+		file_name = "trades_" + datetime.now().strftime('%Y-%m-%d') + ".csv"
+		df = pd.DataFrame({'Top Shares':top_shares_formatted,'Top Prices':top_prices_formatted,'Last 10 Times':last_10_times_formatted,'Last 10 Prices':last_10_prices_formatted,'Last 10 Shares':last_10_shares_formatted,'Captured Datetimes':captured_datetime}) 
+		if not os.path.isfile(file_name):
+			df.to_csv(file_name, index=False, encoding='utf-8')
+		else:
+			df.to_csv(file_name,index=False, encoding='utf-8', mode='a', header=False)
+
 def main():
 	done = False
 	while not done:
 		if msvcrt.kbhit(): # Click in console and press 'Esc' to exit from script
 			# Create a csv file
-			df = pd.DataFrame({'Top Shares':top_shares_formatted,'Top Prices':top_prices_formatted,'Last 10 Times':last_10_times_formatted,'Last 10 Prices':last_10_prices_formatted,'Last 10 Shares':last_10_shares_formatted,'Captured Datetimes':captured_datetime}) 
-			df.to_csv('trades.csv', index=False, encoding='utf-8')
 			# User press 'Esc' in keyboard
 			done = True
 		else:
